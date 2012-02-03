@@ -10,21 +10,22 @@ Raphael.fn.importSVG = function (rawSVG, set, callback) {
   try {
     if (typeof rawSVG === 'undefined')
       throw 'No data was provided.';
-    
+
     rawSVG = rawSVG.replace(/\n|\r|\t/gi, '');
-    
+
     if (!rawSVG.match(/<svg(.*?)>(.*)<\/svg>/i))
       throw "The data you entered doesn't contain valid SVG.";
-    
+
     var findAttr  = new RegExp('([a-z\-]+)="(.*?)"','gi'),
         findStyle = new RegExp('([a-z\-]+) ?: ?([^ ;]+)[ ;]?','gi'),
-        findNodes = new RegExp('<(rect|polyline|circle|ellipse|path|polygon|image|text).*?\/>','gi');
-    
-    while(match = findNodes.exec(rawSVG)){      
+        findNodes = new RegExp('<(rect|polyline|circle|ellipse|path|polygon|image|text).*?\/>','gi'),
+        svgSet    = this.set();
+
+    while(match = findNodes.exec(rawSVG)){
       var shape, style,
           attr = { 'fill':'#000' },
           node = RegExp.$1;
-      
+
       while(findAttr.exec(match)){
         switch(RegExp.$1) {
           case 'stroke-dasharray':
@@ -38,14 +39,14 @@ Raphael.fn.importSVG = function (rawSVG, set, callback) {
           break;
         }
       };
-      
+
       if (typeof attr['stroke-width'] === 'undefined')
         attr['stroke-width'] = (typeof attr['stroke'] === 'undefined' ? 0 : 1);
-      
+
       if (style)
         while(findStyle.exec(style))
           attr[RegExp.$1] = RegExp.$2;
-      
+
       switch(node) {
         case 'rect':
           shape = this.rect();
@@ -69,17 +70,21 @@ Raphael.fn.importSVG = function (rawSVG, set, callback) {
         //-F   shape = this.text();
         //-F break;
       }
-      
+
       shape.attr(attr);
-      
+      svgSet.push(shape);
+
       if (typeof set !== 'undefined')
         set.push(shape);
 
-	  if (typeof callback == 'function') 
-		  callback(shape);
-    };
+      if (typeof callback == 'function')
+        callback(shape);
+      };
+
+      return svgSet;
   } catch (error) {
     alert('The SVG data you entered was invalid! (' + error + ')');
+    return undefined;
   }
 };
 
@@ -87,7 +92,7 @@ Raphael.fn.importSVG = function (rawSVG, set, callback) {
 Raphael.fn.polygon = function(pointString) {
   var poly  = ['M'],
       point = pointString.split(' ');
-      
+
   for(var i=0; i < point.length; i++) {
      var c = point[i].split(',');
      for(var j=0; j < c.length; j++) {
@@ -99,6 +104,6 @@ Raphael.fn.polygon = function(pointString) {
       poly.push('L');
   }
   poly.push('Z');
-  
+
   return this.path(poly);
 };
